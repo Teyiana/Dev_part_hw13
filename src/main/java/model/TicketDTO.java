@@ -9,7 +9,7 @@ import java.sql.Timestamp;
 public class TicketDTO {
     private long id;
     private Timestamp createdAt;
-    private long clientId;
-    private String fromPlanetId;
-    private String toPlanetId;
+    private ClientDTO client;
+    private PlanetDTO fromPlanet;
+    private PlanetDTO toPlanet;
 }

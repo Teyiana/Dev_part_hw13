@@ -1,50 +1,56 @@
 package dao;
-import entity.Ticket;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import entity.Planet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import util.HibernateSessionFactoryUtil;
 import java.util.List;
 
-public class PlanetDao {
+public class PlanetDao implements  Dao {
+
+    private static  final Logger LOGGER = LoggerFactory.getLogger(PlanetDao.class);
+
     public Planet findById(String id) {
         return HibernateSessionFactoryUtil.getSessionFactory().openSession().get(Planet.class, id);
-
     }
 
     public Planet create(String planeId, String planetName) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        Transaction tx1 = session.beginTransaction();
-        Planet planet = new Planet(planeId, planetName);
-        session.persist(planet);
-        tx1.commit();
-        session.close();
-        return planet;
+        return doInSession(s -> {
+            Transaction tx1 = s.beginTransaction();
+            Planet planet = new Planet(planeId, planetName);
+            s.persist(planet);
+            tx1.commit();
+            return planet;
+        });
     }
 
-    public void update(Planet planet) {
-        Session session =  HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        Transaction tx1 = session.beginTransaction();
-        session.merge(planet);
-        tx1.commit();
-        session.close();
+    public Planet update(Planet planet) {
+        return doInSession(s -> {
+            Transaction tx1 = s.beginTransaction();
+            s.merge(planet);
+            tx1.commit();
+            return planet;
+        });
     }
 
-    public void delete(Planet planet) {
-        Session session =  HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        Transaction tx1 = session.beginTransaction();
-        session.remove(planet);
-        tx1.commit();
-        session.close();
-    }
+    public Boolean delete(Planet planet) {
+        return doInSession(s -> {
+            try {
+                Transaction tx1 = s.beginTransaction();
+                s.remove(planet);
+                tx1.commit();
+                return true;
+            } catch (Exception e) {
+                LOGGER.error("Planet deletion failed", e);
+                return false;
+            }
 
+        });
+    }
     public List<Planet> findAll() {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        return session.createQuery("FROM Planet", Planet.class).list();
-    }
-
-    public Ticket findTicketByID(long id){
-        return HibernateSessionFactoryUtil.getSessionFactory().openSession().get(Ticket.class, id);
+        return doInSession(s -> s.createQuery("FROM Planet", Planet.class).list());
     }
 
 }

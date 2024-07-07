@@ -3,8 +3,6 @@ package entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.ToString;
-
 import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 
@@ -21,30 +19,18 @@ public class Ticket {
     @Column
     @NotNull
     private Timestamp created_at;
-    @Column
-    @NotNull
-    private Long client_id;
-    @Column
-    @NotNull
-    private String from_planet_id;
-    @Column
-    @NotNull
-    private String to_planet_id;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "client_id", insertable = false, updatable = false)
-    @ToString.Exclude
+    @JoinColumn(name = "client_id", insertable = true, updatable = false)
     private Client client;
 
     @ManyToOne
-    @JoinColumn(name = "from_planet_id",  insertable = false, updatable = false)
-    @ToString.Exclude
+    @JoinColumn(name = "from_planet_id",  insertable = true, updatable = false)
     private Planet fromPlanet;
 
 
     @ManyToOne
-    @JoinColumn(name = "to_planet_id", insertable = false, updatable = false)
-    @ToString.Exclude
+    @JoinColumn(name = "to_planet_id", insertable = true, updatable = false)
     private Planet toPlanet;
 
 
@@ -55,18 +41,19 @@ public class Ticket {
     public Ticket() {
     }
 
-    public Ticket(Timestamp timestamp, long clientId, String planetFrom, String planetTo) {
+    public Ticket(Timestamp timestamp, Client client, Planet planetFrom, Planet planetTo) {
         this.created_at = timestamp;
-        this.client_id = clientId;
-        this.from_planet_id = planetFrom;
-        this.to_planet_id = planetTo;
+        this.client = client;
+        this.fromPlanet  = planetFrom;
+        this.toPlanet = planetTo;
     }
 
-    public Ticket(long id, Timestamp createdAt, long clientId, String fromPlanId, String toPlanId) {
+    public Ticket(long id, Timestamp createdAt, Client client, Planet planetFrom, Planet planetTo) {
         this.id = id;
         this.created_at = createdAt;
-        this.client_id = clientId;
-        this.from_planet_id = fromPlanId;
-        this.to_planet_id =  toPlanId;
+        this.client = client;
+        this.fromPlanet = planetFrom;
+        this.toPlanet = planetTo;
     }
+
 }

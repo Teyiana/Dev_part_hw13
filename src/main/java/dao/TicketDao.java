@@ -1,49 +1,60 @@
 package dao;
 
+import entity.Client;
+import entity.Planet;
 import entity.Ticket;
-import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import util.HibernateSessionFactoryUtil;
 import java.sql.Timestamp;
 import java.util.List;
 
-public class TicketDao implements Dao{
+public class TicketDao implements Dao {
+
+    private static  final Logger LOGGER = LoggerFactory.getLogger(PlanetDao.class);
+
+
+
     public Ticket findById(long id) {
         return HibernateSessionFactoryUtil.getSessionFactory().openSession().get(Ticket.class, id);
     }
 
-    public Ticket create(Timestamp timestamp, long clientId, String planetFrom, String planetTo) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        Transaction tx1 = session.beginTransaction();
-        Ticket ticket = new Ticket(timestamp, clientId, planetFrom, planetTo);
-        session.persist(ticket);
-        tx1.commit();
-        session.close();
-        return ticket;
+    public Ticket create(Timestamp timestamp, Client client, Planet planetFrom, Planet planetTo) {
+        return doInSession(s -> {
+            Transaction tx1 = s.beginTransaction();
+            Ticket ticket = new Ticket(timestamp, client, planetFrom, planetTo);
+            s.persist(ticket);
+            tx1.commit();
+            return ticket;
+        });
     }
 
-    public void update(Ticket ticket) {
-        Session session =  HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        Transaction tx1 = session.beginTransaction();
-        session.merge(ticket);
-        tx1.commit();
-        session.close();
+    public Ticket update(Ticket ticket) {
+        return doInSession(s -> {
+            Transaction tx1 = s.beginTransaction();
+            s.merge(ticket);
+            tx1.commit();
+            return ticket;
+        });
     }
 
-    public void delete(Ticket ticket) {
-        Session s =  HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        Transaction tx1 = s.beginTransaction();
-        s.remove(ticket);
-        tx1.commit();
-        s.close();
+    public Boolean delete(Ticket ticket) {
+        return doInSession(s -> {
+            try{
+                Transaction tx1 = s.beginTransaction();
+                s.remove(ticket);
+                tx1.commit();
+                return true;
+            }catch (Exception e) {
+                LOGGER.error("Ticket deletion failed", e);
+                return false;
+            }
+
+        });
     }
 
     public List<Ticket> findAll() {
         return doInSession(s -> s.createQuery("FROM Ticket", Ticket.class).list());
-    }
-
-    public List<Ticket> findClientTickets(long id) {
-        String query = String.format("FROM Ticket WHERE client_id = %d", id);
-        return doInSession(s -> s.createQuery(query, Ticket.class).list());
     }
 }

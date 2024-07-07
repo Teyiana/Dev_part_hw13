@@ -1,54 +1,53 @@
 package dao;
 
-import entity.Ticket;
-import jakarta.persistence.Table;
-import org.hibernate.Session;
 import org.hibernate.Transaction;
 import entity.Client;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import util.HibernateSessionFactoryUtil;
-
 import java.util.List;
 
-public class ClientDao {
+public class ClientDao implements Dao{
+    private static  final Logger LOGGER = LoggerFactory.getLogger(ClientDao.class);
 
     public Client findById(long id) {
         return HibernateSessionFactoryUtil.getSessionFactory().openSession().get(Client.class, id);
     }
 
     public Client create(String clientName) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        Transaction tx1 = session.beginTransaction();
-        Client client = new Client(clientName);
-        session.persist(client);
-        tx1.commit();
-        session.close();
-        return client;
+        return doInSession(s -> {
+            Transaction tx1 = s.beginTransaction();
+            Client client = new Client(clientName);
+            s.persist(client);
+            tx1.commit();
+            return client;
+        });
     }
 
-    public void update(Client client) {
-        Session session =  HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        Transaction tx1 = session.beginTransaction();
-        session.merge(client);
-        tx1.commit();
-        session.close();
+    public Client update(Client client) {
+        return doInSession(s -> {
+            Transaction tx1 = s.beginTransaction();
+            s.merge(client);
+            tx1.commit();
+            return client;
+        });
     }
 
-    public void delete(Client client) {
-        Session session =  HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        Transaction tx1 = session.beginTransaction();
-        session.remove(client);
-        tx1.commit();
-        session.close();
+    public Boolean delete(Client client) {
+        return doInSession(s -> {
+            try{
+                Transaction tx1 = s.beginTransaction();
+                s.remove(client);
+                tx1.commit();
+                return true;
+            }catch (Exception e) {
+                LOGGER.error("Client deletion failed", e);
+                return false;
+            }
+        });
     }
 
     public List<Client> findAll() {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        return session.createQuery("FROM Client", Client.class).list();
+        return doInSession(s -> s.createQuery("FROM Client", Client.class).list());
     }
-
-    public Ticket findTicketById(long id){
-        return HibernateSessionFactoryUtil.getSessionFactory().openSession().get(Ticket.class, id);
-    }
-
-
 }

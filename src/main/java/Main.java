@@ -9,7 +9,6 @@ import service.PlanetCrudService;
 import service.TicketCrudService;
 
 import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -58,7 +57,7 @@ public class Main {
 
         LOGGER.info("Create ticket");
         TicketCrudService ticketCrudService = new TicketCrudService();
-        TicketDTO ticket = ticketCrudService.createTicket(4,"MAR1", "MOON11");
+        TicketDTO ticket = ticketCrudService.createTicket(client.getId(), "MAR1", "MOON11");
         LOGGER.info("Created {}", ticket);
         TicketDTO findTicket = ticketCrudService.findTicket(ticket.getId());
         LOGGER.info("Found {}", findTicket);
@@ -69,16 +68,12 @@ public class Main {
         TicketDTO toUpdateTicket = new TicketDTO();
         toUpdateTicket.setId(ticket.getId());
         toUpdateTicket.setCreatedAt(Timestamp.valueOf("2023-06-16 15:37:33"));
-        toUpdateTicket.setClientId(client.getId());
-        toUpdateTicket.setFromPlanetId("MAR1");
-        toUpdateTicket.setToPlanetId("MOON11");
+        toUpdateTicket.setClient(client);
+        toUpdateTicket.setFromPlanet(new PlanetDTO("MAR1"));
+        toUpdateTicket.setToPlanet(new PlanetDTO("MOON11"));
         LOGGER.info("Try update from {} to {}", ticket, toUpdateTicket);
         ticketCrudService.updateTicket(toUpdateTicket);
         LOGGER.info("Updated {}", ticketCrudService.findTicket(toUpdateTicket.getId()));
-
-        LOGGER.info("Find tickets for client {}", client);
-        List<TicketDTO> clientTickets = ticketCrudService.findClientTickets(client);
-        LOGGER.info("Found tickets {}", String.join(",", clientTickets.stream().map(TicketDTO::toString).toList()));
 
         LOGGER.info("Try delete {}", ticket);
         ticketCrudService.deleteTicket(ticket.getId());
